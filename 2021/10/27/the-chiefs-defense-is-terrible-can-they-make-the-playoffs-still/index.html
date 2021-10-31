@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.88.1" />
+
+
+<title>The Chiefs defense is terrible. Can they make the playoffs still?  - Caroline Franke&#39;s Blog</title>
+<meta property="og:title" content="The Chiefs defense is terrible. Can they make the playoffs still?  - Caroline Franke&#39;s Blog">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">6 min read</span>
+    
+
+    <h1 class="article-title">The Chiefs defense is terrible. Can they make the playoffs still? </h1>
+
+    
+    <span class="article-date">2021-10-27</span>
+    
+
+    <div class="article-content">
+      
+<script src="http://cfranke2.github.io/2021/10/27/the-chiefs-defense-is-terrible-can-they-make-the-playoffs-still/index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>The Kansas City Chiefs defense has been ‘the talk’ this NFL season. Obviously, much of the talk is about their offense statistically being ranked one of the best in the league. For example, the Chiefs are ranked third in yards per offensive play. Clearly, most of us can agree that their offense is stellar, but what is going on with the defense?</p>
+<p>With a 3-4 record so far this season, Chiefs fans are worried that their pride and joy won’t make the playoffs this year. In this blog post, I will be looking at the expected points contributed (EXP) by the defense. Where do the Kansas City Chiefs stand? Do they have one of the worst defenses this season?</p>
+<p>Let’s take a look at some numbers.</p>
+<pre class="r"><code>library(tidyverse)
+library(ggrepel)
+library(ggbeeswarm)</code></pre>
+<pre class="r"><code>defense2018 &lt;- read_csv(&quot;defense2018.csv&quot;) %&gt;% mutate(Season=2018, TeamSeason=paste(Tm, Season, sep=&quot; &quot;))
+defense2019 &lt;- read_csv(&quot;defense2019.csv&quot;) %&gt;% mutate(Season=2019, TeamSeason=paste(Tm, Season, sep=&quot; &quot;))
+defense2020 &lt;- read_csv(&quot;defense2020.csv&quot;) %&gt;% mutate(Season=2020, TeamSeason=paste(Tm, Season, sep=&quot; &quot;))
+defense2021 &lt;- read_csv(&quot;defense2021.csv&quot;) %&gt;% mutate(Season=2021, TeamSeason=paste(Tm, Season, sep=&quot; &quot;))
+
+defense &lt;- bind_rows(defense2018, defense2019, defense2020, defense2021)</code></pre>
+<p>The data sets that I will be working with are four years worth of defense, or a simpler way to put it, the Patrick Mahomes era. Pro football reference provides stats in every category, like total penalties, total rushing yards, etc. In this blog post, we will be looking at the expected points contributed (EXP). For example, good offensive plays such as first downs generally increase EXP. Similarly on the defensive side, turnovers or allowing third down conversions results in a decrease in EXP, making the points lower.</p>
+<pre class="r"><code>DefensePerGame &lt;- defense %&gt;% 
+  mutate(YPG = TotalYds/G, PPG = PA/G, TeamSeason = paste(Tm, Season, sep=&quot; &quot;))</code></pre>
+<p>First off, I need to average out the 2021 season’s defense so far. To do this, I divided total yards by games to get yards per game and points allowed by games to get points per game.</p>
+<pre class="r"><code>KC &lt;- defense2021 %&gt;% 
+  filter(Tm == &quot;Kansas City Chiefs&quot;)
+  playoffs21 &lt;- c(&quot;Tampa Bay Buccaneers&quot;, &quot;Buffalo Bills&quot;, &quot;Arizona Cardinals&quot;, &quot;Los Angeles Rams&quot;, &quot;Dallas Cowboys&quot;)</code></pre>
+<p>FiveThirtyEight.com predicts the NFL standings for each season and is updated after every game. As of week 7, the Tampa Bay Buccaneers, Buffalo Bills, Arizona Cardinals, Los Angeles Rams and Dallas Cowboys would be the top 5 teams in the playoffs.</p>
+<pre class="r"><code>playoffteams21 &lt;- defense2021 %&gt;% 
+  filter(Tm %in% playoffs21)</code></pre>
+<p>Here, I filtered out “team” in playoffs21, separating the playoff teams and every team in the league.</p>
+<pre class="r"><code>ggplot() + 
+  geom_bar(data=defense2021, aes(x=reorder(Tm, EXP), weight=EXP)) +
+  geom_bar(data=KC, aes(x=reorder(Tm, EXP), weight=EXP), fill=&quot;#E31837&quot;) +
+  geom_bar(data=playoffteams21, aes(x=reorder(Tm, EXP), weight=EXP), fill=&quot;light blue&quot;) +
+  coord_flip() + theme_minimal() + 
+  labs(
+    x=&quot;Teams&quot;,
+    y=&quot;Expected Points Contributed (EXP)&quot;, 
+    title=&quot;Kansas City Chiefs Expected Points Contributed By Defense&quot;,
+    subtitle=&quot;The Chiefs have the lowest EXP in the NFL. Will they make the 2021 playoffs?&quot;,
+    caption=&quot;Source: Pro Football Reference | By Caroline Franke&quot;
+  ) +
+  theme_minimal() +
+   theme(
+    plot.title = element_text(size = 13, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=9), 
+    panel.grid.minor = element_blank()
+    )</code></pre>
+<p><img src="http://cfranke2.github.io/2021/10/27/the-chiefs-defense-is-terrible-can-they-make-the-playoffs-still/index_files/figure-html/unnamed-chunk-6-1.png" width="672" />
+Well, how ’bout those Chiefs?! Not so much. They have the lowest EXP in the entire NFL. This still begs the question, can the Chiefs make it to the 2021 playoffs with one of the worst defenses in the country?</p>
+<p>The light blue lines on the chart indicate the potential playoff teams as of week 7. Clearly they are much higher than where the Chiefs are. This proves that the odds statistically of the Chiefs making the playoffs this year is very unlikely.</p>
+<pre class="r"><code>DefensePerGame %&gt;% 
+  filter(Tm == &quot;Kansas City Chiefs&quot;) -&gt; kcPerGame</code></pre>
+<p>Here, the Kansas City Chiefs defense was filtered out into its own dataframe to show where they compare to all the other defenses.</p>
+<pre class="r"><code>ggplot() + 
+  geom_point(data=DefensePerGame, aes(x=YPG, y=PPG), color=&quot;grey&quot;) + 
+  geom_point(data=kcPerGame, aes(x=YPG, y=PPG), color=&quot;#E31837&quot;) +
+  geom_text_repel(data=kcPerGame, aes(x=YPG, y=PPG, label=TeamSeason), size=3, color=&quot;black&quot;) +
+  geom_smooth(data=DefensePerGame, aes(x=YPG, y=PPG), method=&quot;lm&quot;, se=FALSE) + 
+  labs(
+    x=&quot;Total yards per game&quot;,
+    y=&quot;Points per game&quot;, 
+    title=&quot;Chiefs Defense is All Over the Board During the Patrick Mahomes Era&quot;,
+    subtitle=&quot;The Chiefs defense has never been great throughout the Pat Mahomes era. And this season might be the worst of them all.&quot;,
+    caption=&quot;Source: Pro Football Reference | By Caroline Franke&quot;
+  ) +
+  theme_minimal() +
+   theme(
+    plot.title = element_text(size = 14, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=9), 
+    panel.grid.minor = element_blank()
+    )</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="http://cfranke2.github.io/2021/10/27/the-chiefs-defense-is-terrible-can-they-make-the-playoffs-still/index_files/figure-html/unnamed-chunk-8-1.png" width="672" />
+The Chiefs defense, yep you guessed it; it’s all over the place. Something interesting, though, is that the 2018 Chiefs did in fact make it to the playoffs. And to add to that, there are only 3 teams in NFL history to have ever allowed 400+ yards per game and still make the playoffs. One of those teams was the Kansas City Chiefs in 2018 with 405.5 yards per game.</p>
+<p>The 2021 Chiefs defense is on the same track as the 2018 Chiefs defense, which can be a positive and negative thing. In 2018, the Chiefs made the playoffs and Patrick Mahomes won MVP, but they lost round 1.</p>
+<p>Another thing to mention is the 2019 Chiefs. This was the Super Bowl year, and the best defense during the Patrick Mahomes era. So, does that mean defense is important to winning championships?</p>
+<pre class="r"><code>playoffteams &lt;- c(&quot;Tampa Bay Buccaneers 2021&quot;, &quot;Buffalo Bills 2021&quot;, &quot;Arizona Cardinals 2021&quot;, &quot;Los Angeles Rams&quot;, &quot;Dallas Cowboys 2021&quot;, &quot;Tampa Bay Buccaneers 2020&quot;, &quot;Kansas City Chiefs 2020&quot;, &quot;Buffalo Bills 2020&quot;, &quot;Green Bay Packers 2020&quot;, &quot;New Orleans Saints 2020&quot;, &quot;Kansas City Chiefs 2019&quot;, &quot;San Francisco 49ers 2019&quot;, &quot;Tennessee Titans 2019&quot;, &quot;Green Bay Packers 2019&quot;, &quot;Baltimore Ravens 2019&quot;, &quot;New England Patriots 2018&quot;, &quot;Los Angeles Rams 2018&quot;, &quot;New Orleans Saints 2018&quot;, &quot;Kansas City Chiefs 2018&quot;, &quot;Los Angeles Chargers 2018&quot;)</code></pre>
+<p>Here, I made a dataframe indicating all of the top 5 playoff teams throughout the Patrick Mahomes era.</p>
+<pre class="r"><code>playoffs &lt;- DefensePerGame %&gt;% 
+  filter(TeamSeason %in% playoffteams) </code></pre>
+<p>Next, I filtered out “TeamSeason” in playoffteams, separating the playoffs and total defense per game.</p>
+<pre class="r"><code>ggplot() +
+geom_beeswarm(data=DefensePerGame, aes(x=Season, y=PPG)) +
+  geom_beeswarm(data=playoffs, aes(x=Season, y=PPG), color=&quot;light blue&quot;) + 
+  geom_beeswarm(data=kcPerGame, aes(x=Season, y=PPG), color= &quot;red&quot;) +
+coord_flip() + theme_minimal() +
+  labs(
+    x=&quot;Season&quot;,
+    y=&quot;Points per game&quot;, 
+    title=&quot;Can the Chiefs Make the Playoffs in 2021?&quot;,
+    subtitle=&quot;Giving up just under 30 points per game makes the Chiefs playoff odds extremely low.&quot;,
+    caption=&quot;Source: Pro Football Reference | By Caroline Franke&quot;
+  ) +
+  theme_minimal() +
+   theme(
+    plot.title = element_text(size = 18, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=9), 
+    panel.grid.minor = element_blank()
+    )</code></pre>
+<p><img src="http://cfranke2.github.io/2021/10/27/the-chiefs-defense-is-terrible-can-they-make-the-playoffs-still/index_files/figure-html/unnamed-chunk-11-1.png" width="672" />
+First off, let’s look at the red dot, the 2019 Chiefs. Being farther left indicates less points per game defensively. Which proves that the 2019 Chiefs, are the best team in the Pat Mahomes era. Now, let’s move on to the 2021 Chiefs. They are giving up just under 30 points per game, which makes the playoff odds extremely low. But, this doesn’t fully take away the chances of them making the playoffs, as the 2018 Chiefs are slightly behind what the 2021 Chiefs currently are.</p>
+<p>At this point, Kansas City Chiefs fans are just hoping for another MVP season from Mahomes to overcome the defensive struggles.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+  </body>
+</html>
+
