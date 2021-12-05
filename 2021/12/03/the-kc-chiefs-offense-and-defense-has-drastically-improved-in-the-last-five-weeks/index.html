@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.88.1" />
+
+
+<title>The KC Chiefs offense and defense has drastically improved in the last five weeks - Caroline Franke&#39;s Blog</title>
+<meta property="og:title" content="The KC Chiefs offense and defense has drastically improved in the last five weeks - Caroline Franke&#39;s Blog">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">8 min read</span>
+    
+
+    <h1 class="article-title">The KC Chiefs offense and defense has drastically improved in the last five weeks</h1>
+
+    
+    <span class="article-date">2021-12-03</span>
+    
+
+    <div class="article-content">
+      
+<script src="http://cfranke2.github.io/2021/12/03/the-kc-chiefs-offense-and-defense-has-drastically-improved-in-the-last-five-weeks/index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>The Kansas City Chiefs started out fairly rough both defensively and offensively. From being at the bottom of their division and not even making the playoff picture, the Chiefs have flipped a switch halfway through the season. Week 8 against the New York Giants was the first week the Chiefs defense was able to perform relative to the expectation, or EPA.</p>
+<p>With a 7-4 record and top of the AFC West, Chiefs fans have a more optimistic outlook on their team for the rest of the season. In this blog post, I will be looking at the completion percentage over expected (CPOE) by the offense, as well as the expected points added (EPA) by the defense this season. Have the Chiefs progressed? Are the playoff odds looking better?</p>
+<p>Let’s take a look at some numbers.</p>
+<pre class="r"><code>library(tidyverse)
+library(nflfastR)
+library(ggbump)
+library(cowplot)</code></pre>
+<pre class="r"><code>games_2021 &lt;- nflfastR::load_pbp(2021) </code></pre>
+<p>The data set that I will be working with is nflfastR which comes with a set of functions to access NFL play-by-play data and team rosters. This data provides a lot of stats, so I am narrowing it down to completion percentage over expected (CPOE) by the offense and expected points added (EPA) by the defense. CPOE is calculated by the probability a pass will be completed using various predictors, like field position, downs, yards to go, etc. In technical terms, it is Actual Completion Percentage - Expected Completion Percentage. On the other hand, EPA is the measure of how well a team performs relative to the expectation. For example, if a team starts on the 50-yard line, the expected points would be 2.5. If they end the drive with a field goal, gaining 3 points, the EPA for that drive would be 3-2.5 or 0.5 EPA.</p>
+<p>Now let’s take a look at CPOE and EPA within the Chiefs.</p>
+<pre class="r"><code>qbs &lt;- games_2021 %&gt;% 
+  filter(!is.na(cpoe)) %&gt;% 
+  group_by(week, passer_player_name) %&gt;% 
+  summarize(cpoe = mean(cpoe), Atts = n()) %&gt;% 
+  filter(Atts &gt; 15)</code></pre>
+<p>First off, I need to take the quarterbacks out of the data in order to get Patrick Mahomes passing attempts.</p>
+<pre class="r"><code>pm &lt;- qbs %&gt;% 
+  filter(passer_player_name == &quot;P.Mahomes&quot;)</code></pre>
+<p>Here, I filtered out “Patrick Mahomes” from the quarterback data.</p>
+<pre class="r"><code>ggplot() + 
+  geom_line(data=qbs, aes(x=week, y=cpoe, group=passer_player_name), color=&quot;grey&quot;) +
+  geom_line(data=pm, aes(x=week, y=cpoe, group=passer_player_name), color=&quot;red&quot;) +
+  geom_vline(xintercept=9, color=&quot;blue&quot;) +
+  scale_x_continuous(breaks=c(2,4,6,8,10,12)) +
+   labs(x=&quot;Week&quot;, y=&quot;CPOE&quot;, title=&quot;Mahomes&#39; Completion Percentage Over Expected&quot;, subtitle=&quot;Mahomes has made some big improvements halfway through the season&quot;, caption=&quot;Source: nflfastR | By Caroline Franke&quot;) + 
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 16, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=10), 
+    panel.grid.minor = element_blank()
+    )</code></pre>
+<p><img src="http://cfranke2.github.io/2021/12/03/the-kc-chiefs-offense-and-defense-has-drastically-improved-in-the-last-five-weeks/index_files/figure-html/unnamed-chunk-5-1.png" width="672" />
+Let’s just say, the first 8 weeks of the season for Patrick Mahomes wasn’t great. He wasn’t completing passes he would normally complete, making his completion percentage over expected (CPOE) decrease as each week went on. But, week 9 against the Green Bay Packers was the turnaround for Mahomes.</p>
+<p>The red line indicates Mahomes CPOE throughout the season. There has been a steady decrease in his completions up until the blue line, which is when he started playing like THE Patrick Mahomes normally does. The more passes Mahomes completes, the more likely the Chiefs win games.</p>
+<pre class="r"><code>defense &lt;- games_2021 %&gt;%
+  group_by(week, defteam) %&gt;%
+  summarize(def_epa = mean(epa, na.rm = TRUE))</code></pre>
+<p>Here, the defense was grouped by week and team to find the defensive EPA average.</p>
+<pre class="r"><code>games_2021 %&gt;%
+  group_by(week, defteam) %&gt;%
+  summarise(def_epa = sum(epa, na.rm = TRUE)) </code></pre>
+<pre><code>## # A tibble: 375 × 3
+## # Groups:   week [13]
+##     week defteam def_epa
+##    &lt;int&gt; &lt;chr&gt;     &lt;dbl&gt;
+##  1     1 ARI     -25.4  
+##  2     1 ATL       8.28 
+##  3     1 BAL      -0.106
+##  4     1 BUF      -0.470
+##  5     1 CAR     -11.3  
+##  6     1 CHI      14.2  
+##  7     1 CIN       1.84 
+##  8     1 CLE      19.0  
+##  9     1 DAL       5.24 
+## 10     1 DEN       1.56 
+## # … with 365 more rows</code></pre>
+<p>This chart is showing the defensive expected points added each week. The lower the number, the better the defense is because they are giving up less points.</p>
+<p>Let’s compare the Chiefs defense in week 1 vs week 11. In week 1, the Chiefs played the Cleveland Browns and won 33-29. Although the Chiefs won, their defensive EPA was 13.507, which is high. Now, looking at week 11, they played the Dallas Cowboys and won 19-9. Their EPA was -15.530, which shows that they gave up less points on the defensive end. The Chiefs defense has been inconsistent throughout this season up until week 8. Can they continue to progress with 4 games remaining in the regular season?</p>
+<pre class="r"><code>kc &lt;- defense %&gt;% 
+  filter(defteam == &quot;KC&quot;)</code></pre>
+<p>Here, the Kansas City Chiefs were filtered out so that we can look at one specific defensive team.</p>
+<pre class="r"><code>ggplot() + 
+  geom_bump(data=defense, aes(x=week, y=def_epa, color=defteam)) + 
+  geom_bump(data=kc, aes(x=week, y=def_epa, color=defteam)) + 
+  geom_point(data=kc, aes(x=week, y=def_epa, color=defteam)) + 
+  scale_color_manual(values = c(&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;red&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;,&quot;grey&quot;)) +
+  scale_y_reverse() + 
+  scale_x_continuous(breaks=c(2,4,6,8,10,12)) + 
+  theme_minimal() + 
+  theme(legend.position = &quot;none&quot;) +
+  labs(x=&quot;Week&quot;, y=&quot;Defense EPA&quot;, title=&quot;The Chiefs Defense...Getting Better?&quot;, subtitle=&quot;Defensive EPA per play throughout the season&quot;, caption=&quot;Source: nflfastR | By Caroline Franke&quot;) + 
+  theme(
+    plot.title = element_text(size = 16, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=10), 
+    panel.grid.minor = element_blank()
+    )</code></pre>
+<p><img src="http://cfranke2.github.io/2021/12/03/the-kc-chiefs-offense-and-defense-has-drastically-improved-in-the-last-five-weeks/index_files/figure-html/unnamed-chunk-9-1.png" width="672" />
+So the Chiefs defense…are they getting better? Well yes. If we look at this bump chart the Chiefs defense is making significant progress starting at week 8. As I talked about above, having a negative number as your EPA is better. They are giving up less points, yards and distance on each play. At the beginning of the season, you can see that the Chiefs had one of the worst defenses in the NFL. Now, the Chiefs are slightly above the average defensive EPA according to this chart.</p>
+<p>Another thing to mention is that the Chiefs defense has allowed fewer than 20 points in 4 straight games (all wins). The last time they did that was a 5-game winning streak from weeks 11-16 in 2019. And just over a month after that, they won Super Bowl LIV.</p>
+<pre class="r"><code>home &lt;- games_2021 %&gt;% 
+  select(week, home_team, home_score) %&gt;% 
+  distinct() %&gt;% 
+  rename(team = home_team, score = home_score)
+visitor &lt;- games_2021 %&gt;% 
+  select(week, away_team, away_score) %&gt;% 
+  distinct() %&gt;% 
+  rename(team = away_team, score = away_score)
+
+offense &lt;- bind_rows(home, visitor)</code></pre>
+<p>Now, I will be looking at the offensive cumulative score and the defensive points surrendered. To do that, I have to select each week, home team and home score. I have to do the same for the visitor, select each week, away team and away score. I will be putting both of those together to create one row for each team and call it “offense.”</p>
+<pre class="r"><code>offenses &lt;- offense %&gt;% 
+  arrange(week, team) %&gt;% 
+  group_by(team) %&gt;% 
+  mutate(cumulative_score = cumsum(score)) </code></pre>
+<p>Next, I made the binding rows code, “offenses” into just “offense.” I mutated the cumulative score and arranged it for both week and team.</p>
+<pre class="r"><code>home &lt;- games_2021 %&gt;% 
+  select(week, home_team, away_score) %&gt;% 
+  distinct() %&gt;% 
+  rename(team = home_team, score = away_score)
+visitor &lt;- games_2021 %&gt;% 
+  select(week, away_team, home_score) %&gt;% 
+  distinct() %&gt;% 
+  rename(team = away_team, score = home_score)
+
+defense &lt;- bind_rows(home, visitor)</code></pre>
+<p>To make the opposing team, I had to select each week, home team and away score. I did the same thing for the visitor; each week, away team and home score. I made the opposing home team and visitor into one row and called it “defense.”</p>
+<pre class="r"><code>defenses &lt;- defense %&gt;% 
+  arrange(week, team) %&gt;% 
+  group_by(team) %&gt;% 
+  mutate(cumulative_score = (cumsum(score)*-1))</code></pre>
+<p>Next, I made the binding rows code, “defenses” into just “defense” I mutated the cumulative score and arranged it for both week and team.</p>
+<pre class="r"><code>kcd &lt;- defenses %&gt;% 
+  filter(team == &quot;KC&quot;)
+
+kco &lt;- offenses %&gt;% 
+  filter(team == &quot;KC&quot;)</code></pre>
+<p>Since I will be looking specifically at the Chiefs defense, I filtered out KC from “defenses.”</p>
+<pre class="r"><code>step1 &lt;- ggplot() + 
+  geom_step(data=offenses, aes(x=week, y=cumulative_score, group=team), color=&quot;grey&quot;) +
+  geom_step(data=kco, aes(x=week, y=cumulative_score, group=team), color=&quot;red&quot;) +
+  geom_point(data=kco, aes(x=week, y=cumulative_score), color=&quot;red&quot;) +
+  scale_x_continuous(breaks=c(2,4,6,8,10,12)) +
+   labs(
+     x=&quot;&quot;, y=&quot;Cumulative Score&quot;, title=&quot;Are the Chiefs&#39; Improvements Turning the Season Around?&quot;, subtitle=&quot;Offensive cumulative score vs defensive points surrendered&quot;) + 
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 16, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=10), 
+    panel.grid.minor = element_blank()
+    )</code></pre>
+<pre class="r"><code>step2 &lt;- ggplot() + 
+  geom_step(data=defenses, aes(x=week, y=cumulative_score, group=team), color=&quot;grey&quot;) +
+  geom_step(data=kcd, aes(x=week, y=cumulative_score, group=team), color=&quot;red&quot;) + 
+  geom_point(data=kcd, aes(x=week, y=cumulative_score), color=&quot;red&quot;) +
+  scale_x_continuous(breaks=c(2,4,6,8,10,12)) +
+  labs(
+    x=&quot;Week&quot;, 
+    y=&quot;Points Surrendered&quot;
+    ) +
+  labs(caption=&quot;Source: nflfastR | By Caroline Franke&quot;) +
+  theme_minimal()</code></pre>
+<pre class="r"><code>plot_grid(step1, step2, ncol=1)</code></pre>
+<p><img src="http://cfranke2.github.io/2021/12/03/the-kc-chiefs-offense-and-defense-has-drastically-improved-in-the-last-five-weeks/index_files/figure-html/unnamed-chunk-17-1.png" width="672" />
+To answer the question, are the Chiefs’ improvements turning the season around, yes. If we look at the first chart, which is the offensive cumulative score, the Chiefs are slowly moving to the top of the pack. More than half of the other teams are much lower than the Chiefs.</p>
+<p>The second graph shows that the Chiefs defense was awful. Weeks 1-7, they were one of the worst defenses in the NFL. But beating the Giants in week 8 started a winning streak and their defense has improved substantially. Now that the Chiefs are at the top of their division, they are in the playoff picture. If they can keep a steady increase in cumulative score, while decreasing the points they give up can secure a spot in the playoffs and potentially win the AFC.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+  </body>
+</html>
+
